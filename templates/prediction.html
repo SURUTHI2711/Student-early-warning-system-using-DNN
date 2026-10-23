@@ -1,0 +1,193 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Predict Student Risk | Deep Neural Network{% endblock %}
+{% block header_title %}Student Academic Risk Prediction{% endblock %}
+
+{% block content %}
+<div style="max-width: 1000px; margin: 0 auto;">
+  <!-- Fast Auto-Fill for Registered Students -->
+  <div class="card" style="background: #f8fafc; border-style: dashed; padding: 18px 24px; margin-bottom: 20px;">
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+      <div>
+        <strong style="font-size: 14px; color: #1e293b;">⚡ Quick Select Registered Student:</strong>
+        <p style="font-size: 12px; color: #64748b; margin-top: 2px;">
+          Select an existing student to auto-populate their current academic indicators into the form.
+        </p>
+      </div>
+      <div style="min-width: 280px;">
+        <select id="existing-student-selector" class="form-control" style="background: white;">
+          <option value="">-- Choose a student to prefill --</option>
+          {% for st in students %}
+          <option value="{{ st.student_id }}"
+                  data-id="{{ st.student_id }}"
+                  data-name="{{ st.name }}"
+                  data-dept="{{ st.department }}"
+                  data-year="{{ st.year }}"
+                  data-sem="{{ st.semester }}"
+                  data-att="{{ st.attendance_percentage }}"
+                  data-marks="{{ st.internal_marks }}"
+                  data-gpa="{{ st.previous_gpa }}"
+                  data-backlogs="{{ st.backlogs }}"
+                  {% if prefill_student and prefill_student.student_id == st.student_id %}selected{% endif %}>
+            {{ st.name }} ({{ st.student_id }} - {{ st.department }})
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3><span>🧠</span> Deep Neural Network Academic Evaluation Input</h3>
+      <span style="font-size: 12px; color: var(--text-muted);">Model: 3-Layer Dense Softmax DNN</span>
+    </div>
+
+    <form id="prediction-form" method="POST" action="{{ url_for('predict') }}">
+      <!-- Student Demographics Section -->
+      <h4 style="font-size: 14px; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; margin-bottom: 16px;">
+        1. Student Identity & Enrollment
+      </h4>
+      <div class="form-grid" style="margin-bottom: 24px;">
+        <div class="form-group">
+          <label for="student_id">Student Roll / Registration ID *</label>
+          <input type="text" id="student_id" name="student_id" class="form-control" 
+                 placeholder="e.g. CSE2024099" 
+                 value="{{ prefill_student.student_id if prefill_student else '' }}" required>
+        </div>
+
+        <div class="form-group">
+          <label for="student_name">Student Full Name *</label>
+          <input type="text" id="student_name" name="student_name" class="form-control" 
+                 placeholder="e.g. Aarav Patel" 
+                 value="{{ prefill_student.name if prefill_student else '' }}" required>
+        </div>
+
+        <div class="form-group">
+          <label for="department">Academic Department</label>
+          <select id="department" name="department" class="form-control">
+            <option value="Computer Science & Engineering" {% if prefill_student and prefill_student.department == 'Computer Science & Engineering' %}selected{% endif %}>Computer Science & Engineering</option>
+            <option value="Artificial Intelligence & Machine Learning" {% if prefill_student and prefill_student.department == 'Artificial Intelligence & Machine Learning' %}selected{% endif %}>Artificial Intelligence & Machine Learning</option>
+            <option value="Information Technology" {% if prefill_student and prefill_student.department == 'Information Technology' %}selected{% endif %}>Information Technology</option>
+            <option value="Data Science" {% if prefill_student and prefill_student.department == 'Data Science' %}selected{% endif %}>Data Science</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="semester">Current Academic Semester</label>
+          <select id="semester" name="semester" class="form-control">
+            {% for s in range(1, 9) %}
+            <option value="{{ s }}" {% if prefill_student and prefill_student.semester == s %}selected{% elif not prefill_student and s == 6 %}selected{% endif %}>Semester {{ s }} (Year {{ ((s+1)//2) }})</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <!-- 10 Academic Indicator Features -->
+      <h4 style="font-size: 14px; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; margin-bottom: 16px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+        2. Continuous Evaluation & Behavioral Metrics (DNN Features)
+      </h4>
+
+      <div class="form-grid">
+        <!-- Feature 1: Attendance -->
+        <div class="form-group">
+          <label for="attendance_percentage">Attendance Percentage (%) *</label>
+          <input type="number" step="0.1" min="0" max="100" id="attendance_percentage" name="attendance_percentage" 
+                 class="form-control" 
+                 value="{{ prefill_acad.attendance_percentage if prefill_acad else '75.0' }}" required>
+          <div class="help-text">Statutory university cutoff is 75%. Below 65% is critical.</div>
+        </div>
+
+        <!-- Feature 2: Internal Marks -->
+        <div class="form-group">
+          <label for="internal_marks">Internal Assessment Marks (/100) *</label>
+          <input type="number" step="0.1" min="0" max="100" id="internal_marks" name="internal_marks" 
+                 class="form-control" 
+                 value="{{ prefill_acad.internal_marks if prefill_acad else '60.0' }}" required>
+          <div class="help-text">Continuous internal assessments and lab test average.</div>
+        </div>
+
+        <!-- Feature 3: Assignment Score -->
+        <div class="form-group">
+          <label for="assignment_score">Assignment Score (/100) *</label>
+          <input type="number" step="0.1" min="0" max="100" id="assignment_score" name="assignment_score" 
+                 class="form-control" 
+                 value="{{ prefill_acad.assignment_score if prefill_acad else '65.0' }}" required>
+          <div class="help-text">Average score across homework, problem sets, and mini projects.</div>
+        </div>
+
+        <!-- Feature 4: Previous GPA -->
+        <div class="form-group">
+          <label for="previous_gpa">Previous Cumulative GPA (/10.0) *</label>
+          <input type="number" step="0.01" min="0" max="10.0" id="previous_gpa" name="previous_gpa" 
+                 class="form-control" 
+                 value="{{ prefill_acad.previous_gpa if prefill_acad else '7.00' }}" required>
+          <div class="help-text">Cumulative CGPA from preceding academic semesters.</div>
+        </div>
+
+        <!-- Feature 5: Weekly Study Hours -->
+        <div class="form-group">
+          <label for="study_hours_weekly">Weekly Independent Study Hours *</label>
+          <input type="number" step="0.5" min="0" max="50" id="study_hours_weekly" name="study_hours_weekly" 
+                 class="form-control" 
+                 value="{{ prefill_acad.study_hours_weekly if prefill_acad else '15.0' }}" required>
+          <div class="help-text">Self-study hours outside scheduled university lecture hours.</div>
+        </div>
+
+        <!-- Feature 6: Backlogs -->
+        <div class="form-group">
+          <label for="backlogs">Active Backlogs (Uncleared Courses) *</label>
+          <input type="number" step="1" min="0" max="12" id="backlogs" name="backlogs" 
+                 class="form-control" 
+                 value="{{ prefill_acad.backlogs if prefill_acad else '0' }}" required>
+          <div class="help-text">Number of currently uncleared arrear papers.</div>
+        </div>
+
+        <!-- Feature 7: Assignment Submission Rate -->
+        <div class="form-group">
+          <label for="assignment_submission_rate">Assignment Submission Rate (%) *</label>
+          <input type="number" step="0.1" min="0" max="100" id="assignment_submission_rate" name="assignment_submission_rate" 
+                 class="form-control" 
+                 value="{{ prefill_acad.assignment_submission_rate if prefill_acad else '80.0' }}" required>
+          <div class="help-text">Percentage of assignments completed and turned in on time.</div>
+        </div>
+
+        <!-- Feature 8: Engagement Score -->
+        <div class="form-group">
+          <label for="engagement_score">Classroom & LMS Engagement Score (/10) *</label>
+          <input type="number" step="0.1" min="1" max="10" id="engagement_score" name="engagement_score" 
+                 class="form-control" 
+                 value="{{ prefill_acad.engagement_score if prefill_acad else '6.5' }}" required>
+          <div class="help-text">Online portal access, seminar participation, and instructor interaction.</div>
+        </div>
+
+        <!-- Feature 9: Previous Failures -->
+        <div class="form-group">
+          <label for="previous_failures">Previous Course Failures (Historical) *</label>
+          <input type="number" step="1" min="0" max="8" id="previous_failures" name="previous_failures" 
+                 class="form-control" 
+                 value="{{ prefill_acad.previous_failures if prefill_acad else '0' }}" required>
+          <div class="help-text">Historical count of courses failed in previous semesters.</div>
+        </div>
+
+        <!-- Feature 10: Exam Score -->
+        <div class="form-group">
+          <label for="exam_score">Midterm / Diagnostic Exam Score (/100) *</label>
+          <input type="number" step="0.1" min="0" max="100" id="exam_score" name="exam_score" 
+                 class="form-control" 
+                 value="{{ prefill_acad.exam_score if prefill_acad else '60.0' }}" required>
+          <div class="help-text">Most recent standardized midterm or diagnostic test mark.</div>
+        </div>
+      </div>
+
+      <!-- Action Button -->
+      <div style="margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 12px;">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Cancel</a>
+        <button type="submit" id="btn-predict-submit" class="btn btn-primary" style="padding: 12px 28px; font-size: 15px;">
+          <span>⚡</span> Predict Academic Risk Level
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

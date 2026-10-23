@@ -1,0 +1,67 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Student Reports Center | Early Warning System{% endblock %}
+{% block header_title %}Student Academic Risk Reports & Mentoring Dossiers{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <div>
+      <h3><span>📑</span> Generated Academic Intervention Dossiers</h3>
+      <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+        Official documentation for department academic advisory boards and student mentoring files.
+      </p>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="modern-table">
+      <thead>
+        <tr>
+          <th>Dossier Ref.</th>
+          <th>Student Details</th>
+          <th>Department</th>
+          <th>Risk Assessment</th>
+          <th>Date Generated</th>
+          <th>Evaluator</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for pred in predictions %}
+        <tr>
+          <td><code style="font-size: 11px;">EWS-REP-{{ "%05d"|format(pred.id) }}</code></td>
+          <td>
+            <strong>{{ pred.name }}</strong><br>
+            <span style="font-size: 11px; color: var(--text-muted);">{{ pred.student_id }}</span>
+          </td>
+          <td>{{ pred.department }}</td>
+          <td>
+            {% if pred.risk_level == 'LOW RISK' %}
+              <span class="badge badge-low"><span class="badge-pulse"></span> Low Risk</span>
+            {% elif pred.risk_level == 'MEDIUM RISK' %}
+              <span class="badge badge-medium"><span class="badge-pulse"></span> Med Risk</span>
+            {% else %}
+              <span class="badge badge-high"><span class="badge-pulse"></span> High Risk</span>
+            {% endif %}
+          </td>
+          <td style="font-size: 12px; color: var(--text-muted);">{{ pred.prediction_date[:16] }}</td>
+          <td style="font-size: 12px;">{{ pred.predicted_by }}</td>
+          <td>
+            <a href="{{ url_for('report_view', prediction_id=pred.id) }}" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 4px;">
+              <span>🖨️</span> View & Print Dossier
+            </a>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 32px;">
+            No reports available yet. Run a prediction to create student reports.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

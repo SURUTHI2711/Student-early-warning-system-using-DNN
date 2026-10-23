@@ -1,0 +1,246 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Academic Report | {{ data.student.name }} | {{ data.report_id }}{% endblock %}
+{% block header_title %}Student Early Warning Report Dossier{% endblock %}
+
+{% block content %}
+<!-- Print Action Bar (Hidden on print) -->
+<div class="no-print" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+  <a href="{{ url_for('reports') }}" class="btn btn-secondary">
+    &larr; Back to Reports
+  </a>
+  <div style="display: flex; gap: 10px;">
+    <button onclick="window.print()" class="btn btn-primary" style="padding: 10px 22px;">
+      <span>🖨️</span> Print / Save as PDF
+    </button>
+  </div>
+</div>
+
+<!-- Formal Printable Institutional Report Document -->
+<div class="card" style="padding: 40px; background: white; border: 1px solid #cbd5e1; max-width: 900px; margin: 0 auto; box-shadow: var(--shadow-md);">
+  <!-- Institutional Header -->
+  <div style="text-align: center; border-bottom: 2px solid #0f172a; padding-bottom: 16px; margin-bottom: 24px;">
+    <div style="font-size: 20px; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 0.05em;">
+      Department of Computer Science & Engineering / AIML
+    </div>
+    <div style="font-size: 13px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 4px;">
+      Student Academic Early Warning & Intervention Cell
+    </div>
+    <div style="font-size: 11px; color: #64748b; margin-top: 4px;">
+      AI-Powered Predictive Academic Monitoring System &bull; Confidential Advisory Report
+    </div>
+  </div>
+
+  <!-- Document Meta & Identification -->
+  <div style="display: flex; justify-content: space-between; font-size: 12px; color: #475569; margin-bottom: 24px; padding: 8px 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-sm);">
+    <div>Report Reference: <strong>{{ data.report_id }}</strong></div>
+    <div>Date Generated: <strong>{{ data.generated_date }}</strong></div>
+    <div>Evaluator: <strong>{{ data.assessment.predicted_by }}</strong></div>
+  </div>
+
+  <!-- Student Demographics -->
+  <h3 style="font-size: 14px; font-weight: 700; text-transform: uppercase; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 14px;">
+    1. Student Identity & Enrollment Information
+  </h3>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px; margin-bottom: 24px;">
+    <div><strong>Student Full Name:</strong> {{ data.student.name }}</div>
+    <div><strong>Roll / Registration ID:</strong> {{ data.student.id }}</div>
+    <div><strong>Department:</strong> {{ data.student.department }}</div>
+    <div><strong>Year & Semester:</strong> Year {{ data.student.year }}, Semester {{ data.student.semester }}</div>
+    <div><strong>Institutional Email:</strong> {{ data.student.email }}</div>
+    <div><strong>Contact Number:</strong> {{ data.student.contact or 'On institutional file' }}</div>
+  </div>
+
+  <!-- DNN Risk Assessment Results -->
+  <h3 style="font-size: 14px; font-weight: 700; text-transform: uppercase; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 14px;">
+    2. Deep Neural Network Risk Assessment
+  </h3>
+  <div style="padding: 18px; border: 2px solid {{ data.assessment.risk_color }}; background: #fafafa; border-radius: var(--radius-sm); margin-bottom: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+      <div>
+        <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: #64748b;">
+          Assessed Academic Vulnerability Tier
+        </div>
+        <div style="font-size: 26px; font-weight: 800; color: {{ data.assessment.risk_color }}; margin-top: 4px;">
+          {{ data.assessment.risk_level }}
+        </div>
+      </div>
+      <div style="text-align: right;">
+        <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: #64748b;">
+          Overall AI Confidence
+        </div>
+        <div style="font-size: 22px; font-weight: 800; color: #0f172a; margin-top: 4px;">
+          {{ data.assessment.confidence }}%
+        </div>
+      </div>
+    </div>
+
+    <!-- Softmax Probabilities Table -->
+    <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid #e2e8f0;">
+      <div style="display: flex; justify-content: space-around; text-align: center; font-size: 12px;">
+        <div>
+          <span style="color: #065f46; font-weight: 600;">Low Risk Probability:</span><br>
+          <strong style="font-size: 15px; color: #065f46;">{{ data.assessment.probabilities.low }}%</strong>
+        </div>
+        <div>
+          <span style="color: #92400e; font-weight: 600;">Medium Risk Probability:</span><br>
+          <strong style="font-size: 15px; color: #92400e;">{{ data.assessment.probabilities.medium }}%</strong>
+        </div>
+        <div>
+          <span style="color: #991b1b; font-weight: 600;">High Risk Probability:</span><br>
+          <strong style="font-size: 15px; color: #991b1b;">{{ data.assessment.probabilities.high }}%</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Academic Metrics Matrix -->
+  <h3 style="font-size: 14px; font-weight: 700; text-transform: uppercase; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 14px;">
+    3. Evaluated Academic Parameters Matrix
+  </h3>
+  <div style="margin-bottom: 24px;">
+    <table class="modern-table" style="font-size: 12px; border: 1px solid #e2e8f0;">
+      <thead>
+        <tr style="background: #f1f5f9;">
+          <th>Parameter</th>
+          <th>Observed Value</th>
+          <th>Institutional Benchmark</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Physical Classroom Attendance</strong></td>
+          <td>{{ "%.1f"|format(data.academic_metrics.attendance) }}%</td>
+          <td>&ge; 75.0% statutory threshold</td>
+          <td>
+            {% if data.academic_metrics.attendance < 75 %}
+            <span style="color: #dc2626; font-weight: bold;">Shortage (Critical)</span>
+            {% else %}
+            <span style="color: #16a34a; font-weight: bold;">Satisfactory</span>
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Continuous Internal Assessment</strong></td>
+          <td>{{ "%.1f"|format(data.academic_metrics.internal_marks) }}/100</td>
+          <td>&ge; 40.0/100 passing benchmark</td>
+          <td>
+            {% if data.academic_metrics.internal_marks < 40 %}
+            <span style="color: #dc2626; font-weight: bold;">Failing Grade</span>
+            {% elif data.academic_metrics.internal_marks < 55 %}
+            <span style="color: #d97706; font-weight: bold;">Borderline Pass</span>
+            {% else %}
+            <span style="color: #16a34a; font-weight: bold;">Satisfactory</span>
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Active Uncleared Backlogs</strong></td>
+          <td>{{ data.academic_metrics.backlogs }} Course(s)</td>
+          <td>0 Arrears</td>
+          <td>
+            {% if data.academic_metrics.backlogs >= 2 %}
+            <span style="color: #dc2626; font-weight: bold;">High Arrear Burden</span>
+            {% elif data.academic_metrics.backlogs == 1 %}
+            <span style="color: #d97706; font-weight: bold;">1 Pending Arrear</span>
+            {% else %}
+            <span style="color: #16a34a; font-weight: bold;">Clean Record</span>
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Cumulative Grade Point Average (CGPA)</strong></td>
+          <td>{{ "%.2f"|format(data.academic_metrics.gpa) }}/10.0</td>
+          <td>&ge; 6.50 Good Standing</td>
+          <td>
+            {% if data.academic_metrics.gpa < 5.5 %}
+            <span style="color: #dc2626; font-weight: bold;">Sub-par GPA</span>
+            {% else %}
+            <span style="color: #16a34a; font-weight: bold;">Good Standing</span>
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Weekly Self-Study Allocation</strong></td>
+          <td>{{ "%.1f"|format(data.academic_metrics.study_hours) }} Hours/Week</td>
+          <td>&ge; 15.0 Hours/Week</td>
+          <td>
+            {% if data.academic_metrics.study_hours < 8 %}
+            <span style="color: #dc2626; font-weight: bold;">Severe Deficit</span>
+            {% else %}
+            <span style="color: #16a34a; font-weight: bold;">Adequate</span>
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Assignment Submission Compliance</strong></td>
+          <td>{{ "%.1f"|format(data.academic_metrics.submission_rate) }}%</td>
+          <td>&ge; 80.0% Submission Rate</td>
+          <td>
+            {% if data.academic_metrics.submission_rate < 60 %}
+            <span style="color: #dc2626; font-weight: bold;">Coursework Deficit</span>
+            {% else %}
+            <span style="color: #16a34a; font-weight: bold;">Acceptable</span>
+            {% endif %}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Key Observations -->
+  <h3 style="font-size: 14px; font-weight: 700; text-transform: uppercase; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 12px;">
+    4. Key Factors & Observations
+  </h3>
+  <ul style="font-size: 13px; color: #334155; line-height: 1.6; margin-bottom: 24px; padding-left: 20px;">
+    {% for rf in data.risk_factors %}
+    <li style="margin-bottom: 4px;"><strong>Academic Vulnerability:</strong> {{ rf }}</li>
+    {% endfor %}
+  </ul>
+
+  <!-- Recommended Mentoring Interventions -->
+  <h3 style="font-size: 14px; font-weight: 700; text-transform: uppercase; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 12px;">
+    5. Actionable Mentoring & Remedial Recommendations
+  </h3>
+  <div style="margin-bottom: 32px;">
+    {% for rec in data.recommendations %}
+    <div style="font-size: 13px; color: #1e293b; margin-bottom: 8px; padding-left: 14px; border-left: 3px solid var(--primary);">
+      {{ rec }}
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Signatures & Acknowledgment -->
+  <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid #cbd5e1; display: flex; justify-content: space-between; font-size: 12px; color: #475569;">
+    <div style="text-align: center; width: 220px;">
+      <div style="height: 48px;"></div>
+      <div style="border-top: 1px solid #64748b; padding-top: 6px;">
+        <strong>Faculty Mentor Signature</strong><br>
+        Date: __________________
+      </div>
+    </div>
+
+    <div style="text-align: center; width: 220px;">
+      <div style="height: 48px;"></div>
+      <div style="border-top: 1px solid #64748b; padding-top: 6px;">
+        <strong>HOD / Academic Lead</strong><br>
+        Department Seal
+      </div>
+    </div>
+
+    <div style="text-align: center; width: 220px;">
+      <div style="height: 48px;"></div>
+      <div style="border-top: 1px solid #64748b; padding-top: 6px;">
+        <strong>Student Acknowledgment</strong><br>
+        Date: __________________
+      </div>
+    </div>
+  </div>
+
+  <!-- Institutional Disclaimer Footer -->
+  <div style="margin-top: 32px; padding-top: 12px; border-top: 1px dashed #e2e8f0; font-size: 10px; color: #94a3b8; text-align: center; line-height: 1.4;">
+    {{ data.disclaimer }}
+  </div>
+</div>
+{% endblock %}

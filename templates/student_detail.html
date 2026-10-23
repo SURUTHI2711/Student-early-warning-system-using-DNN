@@ -1,0 +1,166 @@
+﻿{% extends "base.html" %}
+
+{% block title %}{{ student.name }} Profile | Early Warning System{% endblock %}
+{% block header_title %}Student Academic Profile & Timeline{% endblock %}
+
+{% block content %}
+<div style="max-width: 1100px; margin: 0 auto;">
+  <!-- Profile Header Card -->
+  <div class="card" style="border-top: 4px solid var(--primary); margin-bottom: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+      <div style="display: flex; align-items: center; gap: 18px;">
+        <div style="width: 64px; height: 64px; border-radius: 50%; background: #e0e7ff; color: #4338ca; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: bold;">
+          {{ student.name[0] }}
+        </div>
+        <div>
+          <h2 style="font-size: 24px; font-weight: 800; color: #0f172a;">{{ student.name }}</h2>
+          <div style="font-size: 13px; color: #64748b; margin-top: 2px;">
+            Roll ID: <strong>{{ student.student_id }}</strong> &bull; {{ student.email }}
+          </div>
+          <div style="font-size: 12px; color: #475569; margin-top: 4px;">
+            Department: <strong>{{ student.department }}</strong> &bull; Year {{ student.year }}, Semester {{ student.semester }} &bull; Contact: {{ student.contact_number or 'N/A' }}
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 10px;">
+        {% if prediction %}
+        <div>
+          <span style="font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 600;">Current Risk Standing:</span>
+          {% if prediction.risk_level == 'LOW RISK' %}
+            <span class="badge badge-low" style="font-size: 13px; padding: 5px 14px;"><span class="badge-pulse"></span> LOW RISK</span>
+          {% elif prediction.risk_level == 'MEDIUM RISK' %}
+            <span class="badge badge-medium" style="font-size: 13px; padding: 5px 14px;"><span class="badge-pulse"></span> MEDIUM RISK</span>
+          {% else %}
+            <span class="badge badge-high" style="font-size: 13px; padding: 5px 14px;"><span class="badge-pulse"></span> HIGH RISK</span>
+          {% endif %}
+        </div>
+        {% endif %}
+        {% if current_user.role in ['admin', 'faculty'] %}
+        <a href="{{ url_for('predict', student_id=student.student_id) }}" class="btn btn-primary btn-sm">
+          <span>⚡</span> Re-Evaluate with DNN
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Latest Academic Indicators -->
+  {% if academic %}
+  <div class="stat-grid">
+    <div class="stat-card {% if academic.attendance_percentage < 75 %}high-risk{% else %}low-risk{% endif %}">
+      <div class="label">Attendance</div>
+      <div class="value">{{ "%.1f"|format(academic.attendance_percentage) }}%</div>
+      <div class="sub">University cutoff: 75%</div>
+    </div>
+
+    <div class="stat-card {% if academic.internal_marks < 40 %}high-risk{% else %}primary{% endif %}">
+      <div class="label">Internal Marks</div>
+      <div class="value">{{ "%.1f"|format(academic.internal_marks) }}/100</div>
+      <div class="sub">Continuous assessments</div>
+    </div>
+
+    <div class="stat-card primary">
+      <div class="label">Assignments</div>
+      <div class="value">{{ "%.1f"|format(academic.assignment_score) }}/100</div>
+      <div class="sub">Submission: {{ "%.1f"|format(academic.assignment_submission_rate) }}%</div>
+    </div>
+
+    <div class="stat-card info">
+      <div class="label">Previous CGPA</div>
+      <div class="value">{{ "%.2f"|format(academic.previous_gpa) }}</div>
+      <div class="sub">Cumulative Grade</div>
+    </div>
+
+    <div class="stat-card {% if academic.backlogs > 0 %}high-risk{% else %}low-risk{% endif %}">
+      <div class="label">Active Backlogs</div>
+      <div class="value">{{ academic.backlogs }}</div>
+      <div class="sub">Uncleared arrears</div>
+    </div>
+
+    <div class="stat-card primary">
+      <div class="label">Weekly Study</div>
+      <div class="value">{{ "%.1f"|format(academic.study_hours_weekly) }} hrs</div>
+      <div class="sub">Self study/revision</div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Mentoring Recommendations -->
+  {% if recommendations %}
+  <div class="card">
+    <div class="card-header">
+      <h3><span>💡</span> Active Mentoring Recommendations</h3>
+      {% if prediction %}
+      <a href="{{ url_for('report_view', prediction_id=prediction.id) }}" class="btn btn-secondary btn-sm">
+        <span>🖨️</span> Printable Report
+      </a>
+      {% endif %}
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      {% for rec in recommendations %}
+      <div style="display: flex; gap: 10px; align-items: flex-start; padding: 10px 14px; background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+        <span style="color: var(--primary);">📌</span>
+        <div style="font-size: 13px; color: #1e293b;">{{ rec }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Historical Prediction Log -->
+  <div class="card">
+    <div class="card-header">
+      <h3><span>🕒</span> Prediction & Intervention Log</h3>
+    </div>
+    <div class="table-responsive">
+      <table class="modern-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Risk Standing</th>
+            <th>Confidence</th>
+            <th>Low %</th>
+            <th>Med %</th>
+            <th>High %</th>
+            <th>Evaluated By</th>
+            <th>Report</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for pred in pred_history %}
+          <tr>
+            <td>{{ pred.prediction_date[:16] }}</td>
+            <td>
+              {% if pred.risk_level == 'LOW RISK' %}
+                <span class="badge badge-low">Low Risk</span>
+              {% elif pred.risk_level == 'MEDIUM RISK' %}
+                <span class="badge badge-medium">Med Risk</span>
+              {% else %}
+                <span class="badge badge-high">High Risk</span>
+              {% endif %}
+            </td>
+            <td><strong>{{ "%.1f"|format(pred.confidence) }}%</strong></td>
+            <td>{{ "%.1f"|format(pred.low_probability) }}%</td>
+            <td>{{ "%.1f"|format(pred.medium_probability) }}%</td>
+            <td>{{ "%.1f"|format(pred.high_probability) }}%</td>
+            <td style="font-size: 12px; color: #64748b;">{{ pred.predicted_by }}</td>
+            <td>
+              <a href="{{ url_for('report_view', prediction_id=pred.id) }}" class="btn btn-secondary btn-sm">
+                View Report
+              </a>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 20px;">
+              No prior predictions on record.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

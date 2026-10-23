@@ -1,0 +1,145 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}At-Risk Student Early Warning System{% endblock %} | DNN AI System</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <!-- Chart.js for visualizations -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <div class="app-container">
+    {% if current_user.id %}
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="brand-icon">🎓</div>
+        <div>
+          <h2>At-Risk Warning</h2>
+          <span>DNN AI System</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        {% if current_user.role in ['admin', 'faculty'] %}
+        <div class="nav-section-title">Academic Operations</div>
+        <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
+          <span class="icon">📊</span>
+          <span>Faculty Dashboard</span>
+        </a>
+        <a href="{{ url_for('predict') }}" class="nav-link {% if request.endpoint == 'predict' %}active{% endif %}">
+          <span class="icon">⚡</span>
+          <span>Predict Student Risk</span>
+        </a>
+        <a href="{{ url_for('students') }}" class="nav-link {% if request.endpoint == 'students' %}active{% endif %}">
+          <span class="icon">👥</span>
+          <span>Student Directory</span>
+        </a>
+        <a href="{{ url_for('add_student') }}" class="nav-link {% if request.endpoint == 'add_student' %}active{% endif %}">
+          <span class="icon">➕</span>
+          <span>Enroll New Student</span>
+        </a>
+
+        <div class="nav-section-title">Analytics & Intelligence</div>
+        <a href="{{ url_for('analytics') }}" class="nav-link {% if request.endpoint == 'analytics' %}active{% endif %}">
+          <span class="icon">📈</span>
+          <span>Cohort Analytics</span>
+        </a>
+        <a href="{{ url_for('model_performance') }}" class="nav-link {% if request.endpoint == 'model_performance' %}active{% endif %}">
+          <span class="icon">🧠</span>
+          <span>DNN Architecture</span>
+        </a>
+        <a href="{{ url_for('history') }}" class="nav-link {% if request.endpoint == 'history' %}active{% endif %}">
+          <span class="icon">🕒</span>
+          <span>Prediction History</span>
+        </a>
+        <a href="{{ url_for('reports') }}" class="nav-link {% if request.endpoint == 'reports' %}active{% endif %}">
+          <span class="icon">📑</span>
+          <span>Student Reports</span>
+        </a>
+        {% else %}
+        <div class="nav-section-title">Student Portal</div>
+        <a href="{{ url_for('student_dashboard') }}" class="nav-link {% if request.endpoint == 'student_dashboard' %}active{% endif %}">
+          <span class="icon">👤</span>
+          <span>My Academic Portal</span>
+        </a>
+        {% endif %}
+
+        <div class="nav-section-title">System</div>
+        <a href="{{ url_for('about') }}" class="nav-link {% if request.endpoint == 'about' %}active{% endif %}">
+          <span class="icon">ℹ️</span>
+          <span>About & Ethics</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-badge">
+          <div class="user-avatar">
+            {{ current_user.full_name[0] if current_user.full_name else 'U' }}
+          </div>
+          <div class="user-info">
+            <div class="name" title="{{ current_user.full_name }}">{{ current_user.full_name }}</div>
+            <div class="role">{{ current_user.role }}</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+    {% endif %}
+
+    <!-- Main Content Area -->
+    <div class="main-wrapper">
+      {% if current_user.id %}
+      <header class="top-navbar">
+        <div class="page-title">
+          <h1>{% block header_title %}Early Warning Academic Portal{% endblock %}</h1>
+        </div>
+        <div class="top-actions">
+          <span style="font-size: 13px; color: var(--text-muted);">
+            Role: <strong>{{ current_user.role|capitalize }}</strong>
+          </span>
+          <a href="{{ url_for('logout') }}" class="btn btn-secondary btn-sm" style="color: #ef4444;">
+            Sign Out
+          </a>
+        </div>
+      </header>
+      {% endif %}
+
+      <main class="content-container">
+        <!-- Flashed Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert-box alert-{{ category }}">
+                <span>{{ '✓' if category == 'success' else '⚠️' if category == 'warning' else 'ℹ️' }}</span>
+                <div>{{ message }}</div>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        {% if current_user.id and request.endpoint not in ['about', 'login'] %}
+        <!-- Educational Disclaimer Banner -->
+        <div class="disclaimer-banner">
+          <div class="disclaimer-icon">ℹ️</div>
+          <div>
+            <strong>Supportive Academic Indicator:</strong> {{ disclaimer }}
+          </div>
+        </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+      </main>
+
+      <footer style="padding: 20px 28px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid var(--border-color); background: white;">
+        At-Risk Student Early Warning System &bull; 3rd-Year CSE/AIML Deep Neural Network Academic Project &bull; TensorFlow 2.x &bull; Flask &bull; SQLite
+      </footer>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

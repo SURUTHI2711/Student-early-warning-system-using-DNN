@@ -1,0 +1,99 @@
+﻿{% extends "base.html" %}
+
+{% block title %}About System & Methodology | Early Warning System{% endblock %}
+{% block header_title %}System Overview, DNN Methodology & Ethical Framework{% endblock %}
+
+{% block content %}
+<div style="max-width: 1000px; margin: 0 auto;">
+  <!-- Project Overview Banner -->
+  <div class="card" style="border-top: 4px solid var(--primary);">
+    <h2 style="font-size: 22px; font-weight: 800; color: #0f172a; margin-bottom: 8px;">
+      At-Risk Student Early Warning System Using Deep Neural Networks
+    </h2>
+    <div style="font-size: 13px; color: #64748b; margin-bottom: 16px;">
+      Degree: B.Tech / B.E. &bull; Branch: Computer Science & Engineering / Artificial Intelligence & Machine Learning &bull; 3rd-Year Subject Project: Deep Neural Networks (DNN)
+    </div>
+    <p style="font-size: 14px; color: #334155; line-height: 1.7;">
+      Student attrition and semester academic failure represent critical challenges in higher engineering education. Traditional administrative reviews often identify failing students retroactively after semester examinations, when remedial interventions can no longer prevent year-downs or credit loss. This project addresses this vulnerability by deploying an early warning AI system powered by a multi-layer Deep Neural Network (DNN) that continuously models multi-dimensional continuous evaluation, attendance, backlog patterns, and engagement metrics to classify students into <strong>LOW RISK</strong>, <strong>MEDIUM RISK</strong>, and <strong>HIGH RISK</strong>.
+    </p>
+  </div>
+
+  <!-- Key Objectives -->
+  <div class="card">
+    <div class="card-header">
+      <h3><span>🎯</span> Primary Academic Objectives</h3>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; font-size: 13px; color: #334155;">
+      <div style="background: #f8fafc; padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+        <strong style="color: var(--primary); display: block; margin-bottom: 4px;">1. Proactive Identification</strong>
+        Detect academic vulnerability weeks before mid-term or end-semester examinations based on continuous formative evaluation.
+      </div>
+      <div style="background: #f8fafc; padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+        <strong style="color: var(--primary); display: block; margin-bottom: 4px;">2. Multi-Class Calibration</strong>
+        Classify students into 3 calibrated tiers (Low, Medium, High) with calibrated probability confidence via Softmax activation.
+      </div>
+      <div style="background: #f8fafc; padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+        <strong style="color: var(--primary); display: block; margin-bottom: 4px;">3. Explainable Mentoring</strong>
+        Provide actionable, empathetic mentoring recommendations tailored to specific deficiency factors rather than opaque black-box scores.
+      </div>
+    </div>
+  </div>
+
+  <!-- DNN Mathematical Formulation -->
+  <div class="card">
+    <div class="card-header">
+      <h3><span>🧠</span> Deep Neural Network Mathematical Formulation</h3>
+    </div>
+    <div style="font-size: 13px; color: #334155; line-height: 1.7;">
+      <p style="margin-bottom: 12px;">
+        The system models the academic risk distribution as a multi-class categorization task over feature vector 
+        \( \mathbf{x} \in \mathbb{R}^{10} \), normalized using standard Z-score standardization:
+      </p>
+      <div style="background: #f1f5f9; padding: 12px 18px; border-radius: var(--radius-sm); font-family: monospace; margin-bottom: 14px; font-size: 13px;">
+        z_i = \frac{x_i - \mu_i}{\sigma_i} \quad \text{for each feature } i \in \{1, \dots, 10\}
+      </div>
+
+      <p style="margin-bottom: 12px;">
+        Each hidden layer applies an affine linear transformation followed by a Rectified Linear Unit (ReLU) activation:
+      </p>
+      <div style="background: #f1f5f9; padding: 12px 18px; border-radius: var(--radius-sm); font-family: monospace; margin-bottom: 14px; font-size: 13px;">
+        \mathbf{h}^{(l)} = \text{ReLU}\left( \mathbf{W}^{(l)} \mathbf{h}^{(l-1)} + \mathbf{b}^{(l)} \right) = \max\left(0, \, \mathbf{W}^{(l)} \mathbf{h}^{(l-1)} + \mathbf{b}^{(l)}\right)
+      </div>
+
+      <p style="margin-bottom: 12px;">
+        To prevent overfitting, inverted Dropout (rates \( p = 0.3 \) and \( p = 0.2 \)) and \( L_2 \) weight decay regularization are integrated. The final output layer computes the normalized posterior probability distribution over the 3 risk classes using the Softmax function:
+      </p>
+      <div style="background: #f1f5f9; padding: 12px 18px; border-radius: var(--radius-sm); font-family: monospace; margin-bottom: 14px; font-size: 13px;">
+        P(Y = k \mid \mathbf{x}) = \frac{e^{z_k}}{\sum_{j=1}^{3} e^{z_j}} \quad \text{where } k \in \{0: \text{Low}, 1: \text{Medium}, 2: \text{High}\}
+      </div>
+
+      <p>
+        The objective is optimized by minimizing the Sparse Categorical Cross-Entropy loss function using the adaptive moment estimation (Adam) optimizer.
+      </p>
+    </div>
+  </div>
+
+  <!-- Ethical Framework -->
+  <div class="card" style="border-left: 6px solid #f59e0b;">
+    <div class="card-header">
+      <h3 style="color: #b45309;"><span>⚖️</span> Ethical & Responsible AI Framework</h3>
+    </div>
+    <div style="font-size: 13px; color: #334155; line-height: 1.7;">
+      <p style="margin-bottom: 10px;">
+        Educational AI systems bear profound ethical responsibilities. To prevent stigmatization, algorithmic bias, and automated penalization, this system adheres to the following principles:
+      </p>
+      <ul style="padding-left: 22px;">
+        <li style="margin-bottom: 6px;">
+          <strong>Supportive Indicator Only:</strong> Predictions are strictly advisory mentoring alerts to assist faculty counselors, not definitive disciplinary judgments.
+        </li>
+        <li style="margin-bottom: 6px;">
+          <strong>No Negative Academic Action:</strong> No punitive actions (such as grade reduction or detention) may be taken solely on the basis of model predictions.
+        </li>
+        <li style="margin-bottom: 6px;">
+          <strong>Data Privacy & Access Control:</strong> Role-based authorization ensures students can only view their own academic guidance, while faculty advisors access departmental cohorts.
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

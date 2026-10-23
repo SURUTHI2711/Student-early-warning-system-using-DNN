@@ -1,0 +1,247 @@
+﻿{% extends "base.html" %}
+
+{% block title %}My Academic Dashboard | {{ student.name }}{% endblock %}
+{% block header_title %}Student Academic Progress Portal{% endblock %}
+
+{% block content %}
+<!-- Student Demographics Card -->
+<div class="card" style="border-top: 4px solid var(--primary); margin-bottom: 24px;">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <div style="width: 56px; height: 56px; border-radius: 50%; background: #e0e7ff; color: #4338ca; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold;">
+        {{ student.name[0] }}
+      </div>
+      <div>
+        <h2 style="font-size: 22px; font-weight: 800; color: #0f172a;">{{ student.name }}</h2>
+        <div style="font-size: 13px; color: #64748b; margin-top: 2px;">
+          Roll ID: <strong>{{ student.student_id }}</strong> &bull; {{ student.department }} &bull; Year {{ student.year }}, Semester {{ student.semester }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Current Risk Badge -->
+    <div>
+      {% if prediction %}
+        <div style="text-align: right;">
+          <div style="font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 600; margin-bottom: 4px;">
+            Current Academic Standing
+          </div>
+          {% if prediction.risk_level == 'LOW RISK' %}
+            <span class="badge badge-low" style="font-size: 14px; padding: 6px 16px;"><span class="badge-pulse"></span> LOW RISK</span>
+          {% elif prediction.risk_level == 'MEDIUM RISK' %}
+            <span class="badge badge-medium" style="font-size: 14px; padding: 6px 16px;"><span class="badge-pulse"></span> MEDIUM RISK</span>
+          {% else %}
+            <span class="badge badge-high" style="font-size: 14px; padding: 6px 16px;"><span class="badge-pulse"></span> HIGH RISK</span>
+          {% endif %}
+          <div style="font-size: 12px; color: #475569; margin-top: 4px;">
+            Indicator Confidence: <strong>{{ "%.1f"|format(prediction.confidence) }}%</strong>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Academic KPI Cards -->
+<div class="stat-grid">
+  <div class="stat-card {% if academic and academic.attendance_percentage < 75 %}high-risk{% else %}low-risk{% endif %}">
+    <div class="label">Attendance Status</div>
+    <div class="value">{{ "%.1f"|format(academic.attendance_percentage) if academic else 'N/A' }}%</div>
+    <div class="sub">Requirement: &ge; 75%</div>
+  </div>
+
+  <div class="stat-card {% if academic and academic.internal_marks < 40 %}high-risk{% else %}primary{% endif %}">
+    <div class="label">Internal Assessments</div>
+    <div class="value">{{ "%.1f"|format(academic.internal_marks) if academic else 'N/A' }}/100</div>
+    <div class="sub">Passing mark: 40</div>
+  </div>
+
+  <div class="stat-card primary">
+    <div class="label">Assignment Average</div>
+    <div class="value">{{ "%.1f"|format(academic.assignment_score) if academic else 'N/A' }}/100</div>
+    <div class="sub">Submission: {{ "%.1f"|format(academic.assignment_submission_rate) if academic else '0' }}%</div>
+  </div>
+
+  <div class="stat-card info">
+    <div class="label">Cumulative CGPA</div>
+    <div class="value">{{ "%.2f"|format(academic.previous_gpa) if academic else 'N/A' }}</div>
+    <div class="sub">Scale of 10.0</div>
+  </div>
+
+  <div class="stat-card {% if academic and academic.backlogs > 0 %}high-risk{% else %}low-risk{% endif %}">
+    <div class="label">Active Backlogs</div>
+    <div class="value">{{ academic.backlogs if academic else 0 }}</div>
+    <div class="sub">Uncleared exams</div>
+  </div>
+
+  <div class="stat-card primary">
+    <div class="label">Weekly Study Hours</div>
+    <div class="value">{{ "%.1f"|format(academic.study_hours_weekly) if academic else 'N/A' }} hrs</div>
+    <div class="sub">Recommended: 15+ hrs</div>
+  </div>
+</div>
+
+<!-- Recommendations & Action Plan -->
+<div class="card">
+  <div class="card-header">
+    <h3><span>💡</span> Personalized Academic Guidance & Recommendations</h3>
+    <span style="font-size: 12px; color: var(--text-muted);">Mentoring Advice</span>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 12px;">
+    {% for rec in recommendations %}
+    <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+      <span style="color: var(--primary); font-size: 16px;">📌</span>
+      <div style="font-size: 13px; color: #1e293b; line-height: 1.5;">
+        {{ rec }}
+      </div>
+    </div>
+    {% else %}
+    <div style="padding: 16px; color: #64748b; text-align: center;">
+      Keep up your consistent academic discipline and performance!
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Academic Performance Trend Charts -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+  <!-- Metric Chart -->
+  <div class="card">
+    <div class="card-header">
+      <h3><span>📊</span> Core Competency Distribution</h3>
+    </div>
+    <div style="height: 240px; position: relative;">
+      <canvas id="studentMetricBar"></canvas>
+    </div>
+  </div>
+
+  <!-- Softmax Probabilities Chart -->
+  <div class="card">
+    <div class="card-header">
+      <h3><span>🎯</span> AI Risk Evaluation Breakdown</h3>
+    </div>
+    <div style="height: 240px; position: relative;">
+      <canvas id="studentRiskPie"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Historical Prediction Records Table -->
+<div class="card">
+  <div class="card-header">
+    <h3><span>🕒</span> Prediction & Mentoring History</h3>
+  </div>
+  <div class="table-responsive">
+    <table class="modern-table">
+      <thead>
+        <tr>
+          <th>Evaluation Date</th>
+          <th>Risk Standing</th>
+          <th>Confidence</th>
+          <th>Low Risk %</th>
+          <th>Med Risk %</th>
+          <th>High Risk %</th>
+          <th>Evaluated By</th>
+          <th>Report</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for pred in pred_history %}
+        <tr>
+          <td>{{ pred.prediction_date[:16] }}</td>
+          <td>
+            {% if pred.risk_level == 'LOW RISK' %}
+              <span class="badge badge-low">Low Risk</span>
+            {% elif pred.risk_level == 'MEDIUM RISK' %}
+              <span class="badge badge-medium">Medium Risk</span>
+            {% else %}
+              <span class="badge badge-high">High Risk</span>
+            {% endif %}
+          </td>
+          <td><strong>{{ "%.1f"|format(pred.confidence) }}%</strong></td>
+          <td>{{ "%.1f"|format(pred.low_probability) }}%</td>
+          <td>{{ "%.1f"|format(pred.medium_probability) }}%</td>
+          <td>{{ "%.1f"|format(pred.high_probability) }}%</td>
+          <td style="font-size: 12px; color: #64748b;">{{ pred.predicted_by }}</td>
+          <td>
+            <a href="{{ url_for('report_view', prediction_id=pred.id) }}" class="btn btn-secondary btn-sm">
+              Report
+            </a>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 20px;">
+            No historical records yet.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    // 1. Competency Bar Chart
+    const ctxBar = document.getElementById("studentMetricBar");
+    if (ctxBar) {
+      new Chart(ctxBar, {
+        type: "bar",
+        data: {
+          labels: ["Attendance %", "Internal Marks", "Assignments", "Submission %", "Exam Score"],
+          datasets: [{
+            label: "Your Score",
+            data: [
+              {{ academic.attendance_percentage if academic else 75 }},
+              {{ academic.internal_marks if academic else 60 }},
+              {{ academic.assignment_score if academic else 65 }},
+              {{ academic.assignment_submission_rate if academic else 80 }},
+              {{ academic.exam_score if academic else 60 }}
+            ],
+            backgroundColor: ["#3b82f6", "#6366f1", "#8b5cf6", "#10b981", "#0ea5e9"],
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { beginAtZero: true, max: 100 }
+          },
+          plugins: { legend: { display: false } }
+        }
+      });
+    }
+
+    // 2. Risk Probabilities Pie
+    const ctxPie = document.getElementById("studentRiskPie");
+    if (ctxPie) {
+      new Chart(ctxPie, {
+        type: "pie",
+        data: {
+          labels: ["Low Risk", "Medium Risk", "High Risk"],
+          datasets: [{
+            data: [
+              {{ prediction.low_probability if prediction else 33.3 }},
+              {{ prediction.medium_probability if prediction else 33.3 }},
+              {{ prediction.high_probability if prediction else 33.3 }}
+            ],
+            backgroundColor: ["#10b981", "#f59e0b", "#ef4444"]
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: "bottom" }
+          }
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}

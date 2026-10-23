@@ -1,0 +1,128 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Student Directory | Early Warning System{% endblock %}
+{% block header_title %}Student Roster & Monitoring Directory{% endblock %}
+
+{% block content %}
+<div class="card">
+  <!-- Filter & Search Bar -->
+  <form method="GET" action="{{ url_for('students') }}" style="display: flex; gap: 14px; flex-wrap: wrap; align-items: center; margin-bottom: 20px;">
+    <!-- Keyword Search -->
+    <div style="flex: 1; min-width: 240px;">
+      <input type="text" name="search" class="form-control" placeholder="Search by name, student ID, or email..." value="{{ search }}">
+    </div>
+
+    <!-- Department Filter -->
+    <div style="min-width: 200px;">
+      <select name="department" class="form-control" onchange="this.form.submit()">
+        <option value="All" {% if selected_dept == 'All' %}selected{% endif %}>All Departments</option>
+        <option value="Computer Science & Engineering" {% if selected_dept == 'Computer Science & Engineering' %}selected{% endif %}>Computer Science & Engg</option>
+        <option value="Artificial Intelligence & Machine Learning" {% if selected_dept == 'Artificial Intelligence & Machine Learning' %}selected{% endif %}>AI & Machine Learning</option>
+        <option value="Information Technology" {% if selected_dept == 'Information Technology' %}selected{% endif %}>Information Technology</option>
+        <option value="Data Science" {% if selected_dept == 'Data Science' %}selected{% endif %}>Data Science</option>
+      </select>
+    </div>
+
+    <!-- Risk Level Filter -->
+    <div style="min-width: 170px;">
+      <select name="risk_level" class="form-control" onchange="this.form.submit()">
+        <option value="All" {% if selected_risk == 'All' %}selected{% endif %}>All Risk Tiers</option>
+        <option value="LOW RISK" {% if selected_risk == 'LOW RISK' %}selected{% endif %}>Low Risk Only</option>
+        <option value="MEDIUM RISK" {% if selected_risk == 'MEDIUM RISK' %}selected{% endif %}>Medium Risk Only</option>
+        <option value="HIGH RISK" {% if selected_risk == 'HIGH RISK' %}selected{% endif %}>High Risk Only</option>
+      </select>
+    </div>
+
+    <div>
+      <button type="submit" class="btn btn-secondary">Filter</button>
+      {% if search or selected_dept != 'All' or selected_risk != 'All' %}
+      <a href="{{ url_for('students') }}" class="btn btn-secondary" style="color: #64748b;">Reset</a>
+      {% endif %}
+    </div>
+
+    <div style="margin-left: auto;">
+      <a href="{{ url_for('add_student') }}" class="btn btn-primary">
+        <span>➕</span> Enroll New Student
+      </a>
+    </div>
+  </form>
+
+  <!-- Student Table -->
+  <div class="table-responsive">
+    <table class="modern-table">
+      <thead>
+        <tr>
+          <th>Student ID</th>
+          <th>Student Details</th>
+          <th>Department</th>
+          <th>Attendance</th>
+          <th>Internal Marks</th>
+          <th>CGPA</th>
+          <th>Backlogs</th>
+          <th>Current Risk Standing</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for st in students %}
+        <tr>
+          <td><strong>{{ st.student_id }}</strong></td>
+          <td>
+            <div style="font-weight: 600; color: #0f172a;">{{ st.name }}</div>
+            <div style="font-size: 11px; color: var(--text-muted);">{{ st.email }}</div>
+          </td>
+          <td>
+            <div style="font-size: 12px;">{{ st.department }}</div>
+            <div style="font-size: 11px; color: var(--text-muted);">Year {{ st.year }}, Sem {{ st.semester }}</div>
+          </td>
+          <td>
+            <span style="font-weight: 700; color: {% if st.attendance_percentage < 75 %}#dc2626{% else %}#16a34a{% endif %};">
+              {{ "%.1f"|format(st.attendance_percentage or 0) }}%
+            </span>
+          </td>
+          <td>{{ "%.1f"|format(st.internal_marks or 0) }}/100</td>
+          <td><strong>{{ "%.2f"|format(st.previous_gpa or 0) }}</strong></td>
+          <td>
+            {% if st.backlogs and st.backlogs > 0 %}
+              <span class="badge badge-high">{{ st.backlogs }}</span>
+            {% else %}
+              <span style="color: #64748b; font-size: 12px;">0</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if st.risk_level == 'LOW RISK' %}
+              <span class="badge badge-low"><span class="badge-pulse"></span> Low Risk</span>
+            {% elif st.risk_level == 'MEDIUM RISK' %}
+              <span class="badge badge-medium"><span class="badge-pulse"></span> Med Risk</span>
+            {% elif st.risk_level == 'HIGH RISK' %}
+              <span class="badge badge-high"><span class="badge-pulse"></span> High Risk</span>
+            {% else %}
+              <span style="font-size: 12px; color: #94a3b8;">Pending</span>
+            {% endif %}
+            {% if st.confidence %}
+              <div style="font-size: 11px; color: #64748b; margin-top: 2px;">{{ "%.1f"|format(st.confidence) }}% conf.</div>
+            {% endif %}
+          </td>
+          <td>
+            <div style="display: flex; gap: 6px;">
+              <a href="{{ url_for('student_detail', student_id=st.student_id) }}" class="btn btn-secondary btn-sm" title="View Profile">
+                Profile
+              </a>
+              <a href="{{ url_for('predict', student_id=st.student_id) }}" class="btn btn-primary btn-sm" title="Evaluate Risk with DNN">
+                Predict
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 32px;">
+            No students found matching current filter criteria.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,194 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Faculty & Admin Dashboard{% endblock %}
+{% block header_title %}Institutional Academic Overview{% endblock %}
+
+{% block content %}
+<!-- KPI Stat Cards -->
+<div class="stat-grid">
+  <div class="stat-card primary">
+    <div class="label">Total Students Monitored</div>
+    <div class="value">{{ stats.total_students }}</div>
+    <div class="sub">Across 4 Engineering Departments</div>
+  </div>
+
+  <div class="stat-card low-risk">
+    <div class="label">Low Risk Standing</div>
+    <div class="value" style="color: var(--risk-low);">{{ stats.low_risk_count }}</div>
+    <div class="sub">{{ "%.1f"|format((stats.low_risk_count / stats.total_students * 100) if stats.total_students else 0) }}% of total cohort</div>
+  </div>
+
+  <div class="stat-card med-risk">
+    <div class="label">Medium Risk (Vulnerable)</div>
+    <div class="value" style="color: var(--risk-med);">{{ stats.medium_risk_count }}</div>
+    <div class="sub">Requires academic mentoring</div>
+  </div>
+
+  <div class="stat-card high-risk">
+    <div class="label">High Risk (Critical)</div>
+    <div class="value" style="color: var(--risk-high);">{{ stats.high_risk_count }}</div>
+    <div class="sub">Immediate intervention needed</div>
+  </div>
+
+  <div class="stat-card info">
+    <div class="label">Cohort Average Attendance</div>
+    <div class="value">{{ stats.avg_attendance }}%</div>
+    <div class="sub">Statutory cutoff: 75.0%</div>
+  </div>
+
+  <div class="stat-card info">
+    <div class="label">Average Internal Marks</div>
+    <div class="value">{{ stats.avg_marks }}/100</div>
+    <div class="sub">Passing benchmark: 40/100</div>
+  </div>
+</div>
+
+<!-- Visualizations & Urgent Attention Split -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+  <!-- Risk Donut Chart -->
+  <div class="card" style="margin-bottom: 0;">
+    <div class="card-header">
+      <h3><span>🎯</span> Cohort Academic Risk Distribution</h3>
+      <span style="font-size: 12px; color: var(--text-muted);">DNN Inferred</span>
+    </div>
+    <div style="height: 260px; position: relative;">
+      <canvas id="dashboardRiskDonut"></canvas>
+    </div>
+  </div>
+
+  <!-- Students Requiring Urgent Attention -->
+  <div class="card" style="margin-bottom: 0;">
+    <div class="card-header">
+      <h3 style="color: #b91c1c;"><span>⚠️</span> Priority Attention Roster (High Risk)</h3>
+      <a href="{{ url_for('students', risk_level='HIGH RISK') }}" class="btn btn-secondary btn-sm">View All</a>
+    </div>
+    <div class="table-responsive">
+      <table class="modern-table">
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Att.</th>
+            <th>Marks</th>
+            <th>Backlogs</th>
+            <th>Confidence</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for st in stats.attention_students %}
+          <tr>
+            <td>
+              <strong>{{ st.name }}</strong><br>
+              <span style="font-size: 11px; color: var(--text-muted);">{{ st.student_id }}</span>
+            </td>
+            <td>
+              <span style="color: {% if st.attendance_percentage < 75 %}#dc2626{% else %}#16a34a{% endif %}; font-weight: bold;">
+                {{ "%.1f"|format(st.attendance_percentage) }}%
+              </span>
+            </td>
+            <td>{{ "%.1f"|format(st.internal_marks) }}</td>
+            <td><span class="badge badge-high">{{ st.backlogs }}</span></td>
+            <td><strong>{{ "%.1f"|format(st.high_probability) }}%</strong></td>
+            <td>
+              <a href="{{ url_for('student_detail', student_id=st.student_id) }}" class="btn btn-secondary btn-sm" style="padding: 3px 8px; font-size: 11px;">
+                Profile
+              </a>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px;">
+              No critical students detected at present.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Predictions Table -->
+<div class="card">
+  <div class="card-header">
+    <h3><span>🕒</span> Recent Student Risk Evaluations</h3>
+    <div style="display: flex; gap: 10px;">
+      <a href="{{ url_for('predict') }}" class="btn btn-primary btn-sm">
+        <span>⚡</span> Run New Prediction
+      </a>
+      <a href="{{ url_for('history') }}" class="btn btn-secondary btn-sm">
+        Full History
+      </a>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="modern-table">
+      <thead>
+        <tr>
+          <th>Student ID</th>
+          <th>Student Name</th>
+          <th>Department</th>
+          <th>Attendance</th>
+          <th>Internal Marks</th>
+          <th>Risk Level</th>
+          <th>Model Confidence</th>
+          <th>Evaluated On</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for pred in stats.recent_predictions %}
+        <tr>
+          <td><strong>{{ pred.student_id }}</strong></td>
+          <td>{{ pred.name }}</td>
+          <td><span style="font-size: 12px; color: #475569;">{{ pred.department }}</span></td>
+          <td>{{ "%.1f"|format(pred.attendance_percentage or 0) }}%</td>
+          <td>{{ "%.1f"|format(pred.internal_marks or 0) }}/100</td>
+          <td>
+            {% if pred.risk_level == 'LOW RISK' %}
+              <span class="badge badge-low"><span class="badge-pulse"></span> Low Risk</span>
+            {% elif pred.risk_level == 'MEDIUM RISK' %}
+              <span class="badge badge-medium"><span class="badge-pulse"></span> Medium Risk</span>
+            {% else %}
+              <span class="badge badge-high"><span class="badge-pulse"></span> High Risk</span>
+            {% endif %}
+          </td>
+          <td><strong>{{ "%.1f"|format(pred.confidence) }}%</strong></td>
+          <td style="font-size: 12px; color: var(--text-muted);">{{ pred.prediction_date[:16] }}</td>
+          <td>
+            <div style="display: flex; gap: 6px;">
+              <a href="{{ url_for('result', prediction_id=pred.id) }}" class="btn btn-secondary btn-sm" title="View Result">
+                View
+              </a>
+              <a href="{{ url_for('report_view', prediction_id=pred.id) }}" class="btn btn-secondary btn-sm" title="Print Official Report">
+                Report
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 24px;">
+            No predictions logged yet. Run your first prediction.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    initDashboardRiskDonut(
+      "dashboardRiskDonut",
+      {{ stats.low_risk_count }},
+      {{ stats.medium_risk_count }},
+      {{ stats.high_risk_count }}
+    );
+  });
+</script>
+{% endblock %}

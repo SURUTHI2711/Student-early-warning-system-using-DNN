@@ -1,0 +1,81 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Prediction History | Early Warning System{% endblock %}
+{% block header_title %}Student Risk Prediction Audit Log{% endblock %}
+
+{% block content %}
+<div class="card">
+  <!-- Filter Row -->
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; margin-bottom: 20px;">
+    <form method="GET" action="{{ url_for('history') }}" style="display: flex; gap: 10px; align-items: center;">
+      <label style="font-size: 13px; font-weight: 600; color: #475569;">Filter By Risk Tier:</label>
+      <select name="risk_level" class="form-control" style="width: 180px;" onchange="this.form.submit()">
+        <option value="All" {% if selected_risk == 'All' %}selected{% endif %}>All Records</option>
+        <option value="LOW RISK" {% if selected_risk == 'LOW RISK' %}selected{% endif %}>Low Risk</option>
+        <option value="MEDIUM RISK" {% if selected_risk == 'MEDIUM RISK' %}selected{% endif %}>Medium Risk</option>
+        <option value="HIGH RISK" {% if selected_risk == 'HIGH RISK' %}selected{% endif %}>High Risk</option>
+      </select>
+    </form>
+
+    <a href="{{ url_for('predict') }}" class="btn btn-primary">
+      <span>⚡</span> Run New Prediction
+    </a>
+  </div>
+
+  <div class="table-responsive">
+    <table class="modern-table">
+      <thead>
+        <tr>
+          <th>Evaluation Timestamp</th>
+          <th>Student Roll ID</th>
+          <th>Student Name</th>
+          <th>Department</th>
+          <th>Attendance</th>
+          <th>Internal Marks</th>
+          <th>Predicted Risk</th>
+          <th>Confidence</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for pred in predictions %}
+        <tr>
+          <td style="font-size: 12px; color: var(--text-muted);">{{ pred.prediction_date[:16] }}</td>
+          <td><strong>{{ pred.student_id }}</strong></td>
+          <td>{{ pred.name }}</td>
+          <td><span style="font-size: 12px; color: #475569;">{{ pred.department }}</span></td>
+          <td>{{ "%.1f"|format(pred.attendance_percentage or 0) }}%</td>
+          <td>{{ "%.1f"|format(pred.internal_marks or 0) }}/100</td>
+          <td>
+            {% if pred.risk_level == 'LOW RISK' %}
+              <span class="badge badge-low"><span class="badge-pulse"></span> Low Risk</span>
+            {% elif pred.risk_level == 'MEDIUM RISK' %}
+              <span class="badge badge-medium"><span class="badge-pulse"></span> Med Risk</span>
+            {% else %}
+              <span class="badge badge-high"><span class="badge-pulse"></span> High Risk</span>
+            {% endif %}
+          </td>
+          <td><strong>{{ "%.1f"|format(pred.confidence) }}%</strong></td>
+          <td>
+            <div style="display: flex; gap: 6px;">
+              <a href="{{ url_for('result', prediction_id=pred.id) }}" class="btn btn-secondary btn-sm" title="View Evaluation Result">
+                View
+              </a>
+              <a href="{{ url_for('report_view', prediction_id=pred.id) }}" class="btn btn-secondary btn-sm" title="Print Intervention Report">
+                Report
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 32px;">
+            No historical predictions found matching this criteria.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

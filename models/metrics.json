@@ -1,0 +1,137 @@
+{
+  "dnn": {
+    "accuracy": 91.11,
+    "precision": 91.68,
+    "recall": 91.11,
+    "f1_score": 91.24,
+    "classification_report": {
+      "Low Risk": {
+        "precision": 0.9666666666666667,
+        "recall": 0.8721804511278195,
+        "f1-score": 0.9169960474308301,
+        "support": 133.0
+      },
+      "Medium Risk": {
+        "precision": 0.7666666666666667,
+        "recall": 0.8625,
+        "f1-score": 0.8117647058823529,
+        "support": 80.0
+      },
+      "High Risk": {
+        "precision": 0.9533333333333334,
+        "recall": 0.9727891156462585,
+        "f1-score": 0.9629629629629629,
+        "support": 147.0
+      },
+      "accuracy": 0.9111111111111111,
+      "macro avg": {
+        "precision": 0.8955555555555555,
+        "recall": 0.9024898555913593,
+        "f1-score": 0.8972412387587153,
+        "support": 360.0
+      },
+      "weighted avg": {
+        "precision": 0.9167777777777778,
+        "recall": 0.9111111111111111,
+        "f1-score": 0.9123811287067894,
+        "support": 360.0
+      }
+    },
+    "confusion_matrix": [
+      [
+        116,
+        17,
+        0
+      ],
+      [
+        4,
+        69,
+        7
+      ],
+      [
+        0,
+        4,
+        143
+      ]
+    ]
+  },
+  "logistic_regression": {
+    "accuracy": 89.17,
+    "precision": 89.56,
+    "recall": 89.17,
+    "f1_score": 89.21
+  },
+  "random_forest": {
+    "accuracy": 88.89,
+    "precision": 89.29,
+    "recall": 88.89,
+    "f1_score": 88.96
+  },
+  "comparison": [
+    {
+      "model": "Logistic Regression (Baseline)",
+      "accuracy": 89.17,
+      "precision": 89.56,
+      "recall": 89.17,
+      "f1_score": 89.21
+    },
+    {
+      "model": "Random Forest Classifier",
+      "accuracy": 88.89,
+      "precision": 89.29,
+      "recall": 88.89,
+      "f1_score": 88.96
+    },
+    {
+      "model": "Deep Neural Network (Proposed)",
+      "accuracy": 91.11,
+      "precision": 91.68,
+      "recall": 91.11,
+      "f1_score": 91.24
+    }
+  ],
+  "feature_importance": [
+    {
+      "feature": "internal_marks",
+      "importance": 0.19872352255492795
+    },
+    {
+      "feature": "attendance_percentage",
+      "importance": 0.19514723627236083
+    },
+    {
+      "feature": "exam_score",
+      "importance": 0.11777056731446828
+    },
+    {
+      "feature": "backlogs",
+      "importance": 0.11716643902306526
+    },
+    {
+      "feature": "previous_failures",
+      "importance": 0.11286797894547522
+    },
+    {
+      "feature": "engagement_score",
+      "importance": 0.0830170630371818
+    },
+    {
+      "feature": "previous_gpa",
+      "importance": 0.059435154625946396
+    },
+    {
+      "feature": "assignment_score",
+      "importance": 0.0501774488505085
+    },
+    {
+      "feature": "study_hours_weekly",
+      "importance": 0.034322914741156674
+    },
+    {
+      "feature": "assignment_submission_rate",
+      "importance": 0.03137167463490926
+    }
+  ],
+  "test_samples_count": 360,
+  "epochs_trained": 33
+}

@@ -1,0 +1,192 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Prediction Result | {{ data.student.name }}{% endblock %}
+{% block header_title %}Student Risk Assessment Result{% endblock %}
+
+{% block content %}
+<div style="max-width: 1000px; margin: 0 auto;">
+  <!-- Prominent Risk Banner -->
+  <div class="card" style="border-left: 6px solid {{ data.assessment.risk_color }};">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+      <div>
+        <span style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">
+          Deep Neural Network Inference Verdict
+        </span>
+        <div style="display: flex; align-items: center; gap: 14px; margin-top: 6px;">
+          <h2 style="font-size: 32px; font-weight: 800; color: {{ data.assessment.risk_color }};">
+            {{ data.assessment.risk_level }}
+          </h2>
+          <span style="background: #f1f5f9; padding: 6px 14px; border-radius: 9999px; font-size: 14px; font-weight: 700; color: #334155;">
+            Confidence: {{ data.assessment.confidence }}%
+          </span>
+        </div>
+        <p style="font-size: 14px; color: var(--text-muted); margin-top: 6px;">
+          Student: <strong>{{ data.student.name }}</strong> ({{ data.student.id }}) &bull; {{ data.student.department }} &bull; Sem {{ data.student.semester }}
+        </p>
+      </div>
+
+      <div style="display: flex; gap: 10px;">
+        <a href="{{ url_for('report_view', prediction_id=data.report_id.split('-')[-1]|int) }}" class="btn btn-secondary">
+          <span>🖨️</span> Print Official Report
+        </a>
+        <a href="{{ url_for('predict') }}" class="btn btn-primary">
+          <span>⚡</span> New Prediction
+        </a>
+      </div>
+    </div>
+
+    <!-- Softmax Multi-Class Probabilities Breakdown -->
+    <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+      <h4 style="font-size: 13px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 12px;">
+        Softmax Output Probability Distribution
+      </h4>
+      <div class="prob-container">
+        <!-- Low Risk Bar -->
+        <div class="prob-item">
+          <div class="prob-label-row">
+            <span style="color: #065f46;">Low Risk (Satisfactory Progress)</span>
+            <span style="color: #065f46;">{{ data.assessment.probabilities.low }}%</span>
+          </div>
+          <div class="prob-bar-track">
+            <div class="prob-bar-fill" style="width: {{ data.assessment.probabilities.low }}%; background-color: var(--risk-low);"></div>
+          </div>
+        </div>
+
+        <!-- Medium Risk Bar -->
+        <div class="prob-item">
+          <div class="prob-label-row">
+            <span style="color: #92400e;">Medium Risk (Moderate Vulnerability)</span>
+            <span style="color: #92400e;">{{ data.assessment.probabilities.medium }}%</span>
+          </div>
+          <div class="prob-bar-track">
+            <div class="prob-bar-fill" style="width: {{ data.assessment.probabilities.medium }}%; background-color: var(--risk-med);"></div>
+          </div>
+        </div>
+
+        <!-- High Risk Bar -->
+        <div class="prob-item">
+          <div class="prob-label-row">
+            <span style="color: #991b1b;">High Risk (Critical Intervention Required)</span>
+            <span style="color: #991b1b;">{{ data.assessment.probabilities.high }}%</span>
+          </div>
+          <div class="prob-bar-track">
+            <div class="prob-bar-fill" style="width: {{ data.assessment.probabilities.high }}%; background-color: var(--risk-high);"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Analytical Summary & Explanations -->
+  <div class="card">
+    <div class="card-header">
+      <h3><span>📝</span> Analytical Model Summary</h3>
+      <span style="font-size: 12px; color: var(--text-muted);">Inferred on {{ data.generated_date }}</span>
+    </div>
+    <p style="font-size: 14px; color: #334155; line-height: 1.6; margin-bottom: 20px;">
+      {{ data.assessment.explanation }}
+    </p>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+      <!-- Risk Factors -->
+      <div style="background: #fff5f5; border: 1px solid #fed7d7; border-radius: var(--radius-sm); padding: 18px;">
+        <h4 style="font-size: 14px; font-weight: 700; color: #9b2c2c; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+          <span>⚠️</span> Identified Academic Vulnerabilities
+        </h4>
+        <ul style="padding-left: 20px; font-size: 13px; color: #742a2a; line-height: 1.6;">
+          {% for rf in data.risk_factors %}
+          <li style="margin-bottom: 6px;">{{ rf }}</li>
+          {% else %}
+          <li>No acute risk factors identified. Indicators fall within normal parameters.</li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <!-- Positive Strengths -->
+      <div style="background: #f0fff4; border: 1px solid #c6f6d5; border-radius: var(--radius-sm); padding: 18px;">
+        <h4 style="font-size: 14px; font-weight: 700; color: #22543d; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+          <span>✓</span> Areas of Strength & Stability
+        </h4>
+        <ul style="padding-left: 20px; font-size: 13px; color: #276749; line-height: 1.6;">
+          {% for pf in data.positive_factors %}
+          <li style="margin-bottom: 6px;">{{ pf }}</li>
+          {% else %}
+          <li>Student needs holistic support across multiple academic dimensions.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actionable Recommendations -->
+  <div class="card">
+    <div class="card-header">
+      <h3><span>💡</span> Actionable Mentoring Recommendations</h3>
+      <span style="font-size: 12px; color: var(--text-muted);">Personalized Guidance</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      {% for rec in data.recommendations %}
+      <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+        <span style="color: var(--primary); font-size: 16px;">📌</span>
+        <div style="font-size: 13px; color: #1e293b; line-height: 1.5;">
+          {{ rec }}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <p style="font-size: 11px; color: #94a3b8; margin-top: 16px; font-style: italic;">
+      * Note: These are advisory educational recommendations meant for academic counseling by faculty mentors.
+    </p>
+  </div>
+
+  <!-- Evaluated Parameters Snapshot -->
+  <div class="card">
+    <div class="card-header">
+      <h3><span>📊</span> Evaluated Academic Feature Snapshot</h3>
+      <a href="{{ url_for('student_detail', student_id=data.student.id) }}" class="btn btn-secondary btn-sm">
+        Full Academic History
+      </a>
+    </div>
+    <div class="table-responsive">
+      <table class="modern-table">
+        <thead>
+          <tr>
+            <th>Attendance</th>
+            <th>Internal Marks</th>
+            <th>Assignments</th>
+            <th>Previous CGPA</th>
+            <th>Weekly Study</th>
+            <th>Backlogs</th>
+            <th>Submission Rate</th>
+            <th>Engagement</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <strong style="color: {% if data.academic_metrics.attendance < 75 %}#dc2626{% else %}#16a34a{% endif %};">
+                {{ "%.1f"|format(data.academic_metrics.attendance) }}%
+              </strong>
+            </td>
+            <td>{{ "%.1f"|format(data.academic_metrics.internal_marks) }}/100</td>
+            <td>{{ "%.1f"|format(data.academic_metrics.assignment_score) }}/100</td>
+            <td><strong>{{ "%.2f"|format(data.academic_metrics.gpa) }}</strong></td>
+            <td>{{ "%.1f"|format(data.academic_metrics.study_hours) }} hrs</td>
+            <td>
+              {% if data.academic_metrics.backlogs > 0 %}
+              <span class="badge badge-high">{{ data.academic_metrics.backlogs }} Active</span>
+              {% else %}
+              <span class="badge badge-low">0 None</span>
+              {% endif %}
+            </td>
+            <td>{{ "%.1f"|format(data.academic_metrics.submission_rate) }}%</td>
+            <td>{{ "%.1f"|format(data.academic_metrics.engagement_score) }}/10</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
